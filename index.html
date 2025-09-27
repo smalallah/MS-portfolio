@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>M.Ed. Portfolio Game</title>
+  <style>
+    body { 
+      margin:0; 
+      font-family:Arial,sans-serif; 
+      background: #f3edfd;
+      height: 100vh;
+    }
+    /* Header bar */
+#top-header {
+  width: 100vw;
+  background: #f3edfd;
+  border-bottom: 2.5px solid #a895e6;
+  box-sizing: border-box;
+  position: fixed;      /* <--- This makes it fixed! */
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* Center all child content horizontally */
+  gap: 10px;
+  min-height: 220px;
+  padding: 16px 0 12px 0;
+}
+    #grad-note {
+      font-size: 1.27rem;
+      color: #4a248b;
+      font-weight: 600;
+      margin-bottom: 8px;
+      padding: 10px 34px 10px 34px;
+      background: #ede7fa;
+      border-radius: 11px;
+      box-shadow: 0 2px 8px #e2d8ff33;
+      display: inline-block;
+    }
+    #committee {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 28px;
+      margin-bottom: 0;
+    }
+    .avatar-rect {
+      width: 110px;
+      height: 135px;
+      border-radius: 18px;
+      border: 3px solid #6949d7;
+      box-shadow: 0 2px 10px #6955;
+      background: #fff;
+      object-fit: cover;
+
+    }
+  
+    #checklist {
+      background:#fff8;
+      padding:12px 18px;
+      border-radius:10px;
+      box-shadow:0 4px 14px #5552;
+      font-size:15px;
+      position: absolute;
+      top: 20px;
+      right: 30px;
+    }
+    #checklist ul { list-style:none; margin:0; padding:0; }
+    #checklist li { margin:7px 0; }
+    .completed { text-decoration:line-through; color:#20ad34; }
+    /* Move map down below header */
+#game {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  background: none;
+  overflow: auto;
+  padding-top: 240px;   /* <--- This prevents map from hiding under header */
+}
+    #map-img {
+      width: 50%;
+      height: auto;
+      min-height: 500px;
+      display: block;
+      margin: 0 auto;
+      background: #f3edfd;
+    }
+    #character {
+      position:absolute; width:120px;
+      top:77%; left:10%;
+      transition:all 1s cubic-bezier(.6,1.7,.47,.78);
+      z-index:10;
+    }
+    .slo-spot {
+      position:absolute; width:92px; height:92px; cursor:pointer;
+      background:url('flag.png') no-repeat center center;
+      background-size:cover;
+      border-radius:50%;
+      border:3px solid #b5b5b5;
+      box-shadow:0 0 10px #aaa4;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:bold; font-size:18px; color:#4b206a;
+    }
+    .unlocked { border:3px solid #4cb776; background-color:#c2ffdf88; }
+    #popup {
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:62vw; max-width:600px; min-width:320px;
+      background:#fff; padding:26px 32px 32px 32px;
+      border-radius:13px; box-shadow:0 0 32px #0008;
+      display:none; z-index:1002;
+    }
+    #popup-close {
+      position:absolute; top:10px; right:18px; font-size:24px; cursor:pointer; color:#ba1e2b;
+    }
+    #countdownPopup {
+      position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:2000;
+      background:rgba(0,0,0,0.81); display:flex; align-items:center; justify-content:center;
+    }
+    #countdownBox {
+      background:white; border-radius:20px; text-align:center; padding:38px 48px;
+      box-shadow:0 0 44px #0006;
+    }
+    #countdownBox h2 { font-size:2.1rem; margin-bottom:18px; }
+    #countdown { font-size:2rem; margin-bottom:17px; font-family:monospace;}
+    #countdownBox button {
+      padding:10px 28px; border-radius:9px; font-size:1.2rem;
+      background:#6d4aff; color:white; border:none; cursor:pointer;
+      box-shadow:0 2px 8px #6d4aff33;
+      margin-top:8px;
+    }
+    #countdownBox button:hover { background:#4524be; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header: Defense note and Committee Avatars centered -->
+  <div id="top-header">
+    <div id="grad-note">
+      🎓 Graduation Defense: Friday, November 14, 2025, 2:00 PM
+    </div>
+    <div id="committee">
+      <img src="lior.png" class="avatar-rect" title="Lior">
+      <img src="nathan.png" class="avatar-rect" title="Nathan">
+      <img src="josh.png" class="avatar-rect" title="Josh">
+      <img src="david.png" class="avatar-rect" title="David">
+    </div>
+    <div id="checklist">
+      <strong>Graduation Journey</strong>
+      <ul>
+        <li id="step1">SLO 1: Interpret Contexts</li>
+        <li id="step2">SLO 2: Apply Theory</li>
+        <li id="step3">SLO 3: Dynamic Environments</li>
+        <li id="step4">SLO 4: Research-Informed</li>
+        <li id="step5">SLO 5: Professional Values</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Defense Countdown Modal -->
+  <div id="countdownPopup">
+    <div id="countdownBox">
+      <h2>Final Examination Countdown</h2>
+      <div style="font-size:1.1rem;margin-bottom:7px;">
+        <strong>Date:</strong> Friday, November 14, 2025, 2:00 PM
+      </div>
+      <div id="countdown" style="font-size:2.1rem; margin-bottom:16px;"></div>
+      <button onclick="closeCountdown()">Peek</button>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <div id="game">
+    <img src="bg.png"  id="map-img" alt="Map">
+
+    <!-- Character -->
+    <img id="character" src="chr.png" alt="My Character"/>
+    <!-- SLO "map" spots -->
+    <div class="slo-spot" id="spot1" style="top:72%; left:18%;" onclick="goToSLO(1)">1</div>
+    <div class="slo-spot" id="spot2" style="top:47%; left:32%;" onclick="goToSLO(2)">2</div>
+    <div class="slo-spot" id="spot3" style="top:61%; left:56%;" onclick="goToSLO(3)">3</div>
+    <div class="slo-spot" id="spot4" style="top:33%; left:68%;" onclick="goToSLO(4)">4</div>
+    <div class="slo-spot" id="spot5" style="top:70%; left:81%;" onclick="goToSLO(5)">5</div>
+  </div>
+
+  <!-- SLO Popup -->
+  <div id="popup">
+    <span id="popup-close" onclick="closePopup()">✖</span>
+    <div id="popup-content"></div>
+  </div>
+
+  <script>
+    // Character walking positions for each SLO (match .slo-spot positions, tweak as needed)
+    const charPos = [
+      {top:'77%', left:'10%'}, // Start
+      {top:'72%', left:'18%'},
+      {top:'47%', left:'32%'},
+      {top:'61%', left:'56%'},
+      {top:'33%', left:'68%'},
+      {top:'70%', left:'81%'},
+    ];
+    const character = document.getElementById('character');
+
+    // SLO content array: [title, checklist id, content HTML, artifact link, ...]
+    const SLOs = [
+      {
+        id: 1, title: "Interpret Contexts from Multiple Perspectives",
+        checklist: 'step1',
+        content: `
+        <h2>SLO 1: Interpret Contexts</h2>
+        <p>In EDCI 862, I analyzed coding instruction from historical, social, and ethical lenses. My artifact:</p>
+        <a href="EDCI862_InstructionalDesign.pdf" target="_blank">View Lesson Plan PDF</a>
+        `
+      },
+      {
+        id: 2, title: "Apply Theory to Practice",
+        checklist: 'step2',
+        content: `
+        <h2>SLO 2: Apply Theory</h2>
+        <p>In EDCI 803, I used curriculum and learning theory to teach Python loops via inquiry-based learning. Example artifact:</p>
+        <a href="EDCI803_PythonInquiry.pdf" target="_blank">Inquiry Lesson PDF</a>
+        `
+      },
+      {
+        id: 3, title: "Design Dynamic Learning Environments",
+        checklist: 'step3',
+        content: `
+        <h2>SLO 3: Dynamic Environments</h2>
+        <p>Through EDCI 718, I developed a technology-based plan for improving student–instructor interaction in online programming. My artifact:</p>
+        <a href="EDCI718_TechPlan.pdf" target="_blank">Tech Plan PDF</a>
+        `
+      },
+      {
+        id: 4, title: "Use Research to Inform Practice",
+        checklist: 'step4',
+        content: `
+        <h2>SLO 4: Research-Informed</h2>
+        <p>I published a paper analyzing evidence-based reading programs to inform teaching decisions. Artifact:</p>
+        <a href="PublishedPaper.pdf" target="_blank">Published Paper PDF</a>
+        `
+      },
+      {
+        id: 5, title: "Value Professionalism, Ethics, & Equity",
+        checklist: 'step5',
+        content: `
+        <h2>SLO 5: Professional Values</h2>
+        <p>By hosting a teacher conference and fostering a positive environment, I demonstrate professional growth and equity. Artifact:</p>
+        <a href="ConferenceProgram.pdf" target="_blank">Conference Program PDF</a>
+        `
+      }
+    ];
+
+    function goToSLO(idx) {
+      // Move character to this SLO
+      character.style.top = charPos[idx].top;
+      character.style.left = charPos[idx].left;
+      // Unlock box and checklist
+      document.getElementById('spot'+idx).classList.add('unlocked');
+      document.getElementById('step'+idx).classList.add('completed');
+      // Show popup
+      setTimeout(()=>{
+        document.getElementById('popup-content').innerHTML = SLOs[idx-1].content;
+        document.getElementById('popup').style.display='block';
+      }, 900);
+    }
+    function closePopup() {
+      document.getElementById('popup').style.display='none';
+    }
+
+    // --- Defense countdown logic ---
+    function updateCountdown() {
+      var countdownElem = document.getElementById('countdown');
+      if (!countdownElem) return;
+      var target = new Date('2025-11-14T14:00:00');
+      var now = new Date();
+      var diff = target - now;
+      if(diff < 0) {
+        countdownElem.innerText = "Time to go!";
+      } else {
+        var d = Math.floor(diff / (1000*60*60*24));
+        var h = Math.floor((diff/(1000*60*60))%24);
+        var m = Math.floor((diff/(1000*60))%60);
+        var s = Math.floor((diff/1000)%60);
+        countdownElem.innerText = d+"d "+h+"h "+m+"m "+s+"s";
+      }
+    }
+    function closeCountdown() {
+      document.getElementById('countdownPopup').style.display='none';
+    }
+    window.addEventListener('DOMContentLoaded', function() {
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    });
+  </script>
+</body>
+</html>
